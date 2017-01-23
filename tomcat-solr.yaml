@@ -14,6 +14,12 @@
       src: http://apache.claz.org/lucene/solr/6.4.0/solr-6.4.0.tgz
       dest: "{{ solr_dir }}"
       remote_src: True
+  - name: remove tar file.
+    file:
+      path: "{{ solr_dir }}/solr-6.4.0.tgz"
+      state: absent
+      
+     
   - name: Create solr user and group
     user: 
       name: solr
