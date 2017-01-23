@@ -1,0 +1,35 @@
+---
+- hosts: all
+  become: yes
+  vars_files:
+  - vars.yaml
+
+  tasks:
+  - name: install tomcat server
+    yum: "name={{ item }} state=installed"
+    items:
+      - java
+  - name: download solr
+    unarchive:
+      src: http://apache.claz.org/lucene/solr/6.4.0/solr-6.4.0.tgz
+      dest: "{{ solr_dir }}"
+      remote_src: True
+  - name: Create solr user and group
+    user: 
+      name: solr
+      shell: /bin/bash
+      
+
+  - name: rename directory
+    command: mv {{ solr_dir }}/solr-6.4.0 {{ solr_dir }}/solr
+    args: creates={{ solr_dir }}/solr
+
+  - name: change solr ownership here
+    file:
+      path: "{{ solr_dir }}/solr"
+      owner: solr
+      group: solr
+      recurse: yes
+  - name: start the solr service 
+    become_user: solr
+    shell: " {{ solr_home_bin }}/solr start"
