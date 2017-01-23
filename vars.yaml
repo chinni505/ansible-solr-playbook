@@ -1,5 +1,4 @@
 ---
-download_dir: /tmp
 solr_dir: /opt
 solr_home_bin: /opt/solr/bin
 
