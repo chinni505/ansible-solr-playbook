@@ -1,0 +1,58 @@
+---
+- hosts: all
+  become: yes
+  vars_files:
+  - vars.yaml
+
+  tasks:
+  - name: install tomcat server
+    yum: "name={{ item }} state=installed"
+    items:
+      - java
+      - wget 
+  - name: check if path exists
+    stat: path= "{{ solr_dir }}/solr-6.4"
+    register: check_path
+  - name: download solr
+    command: wget http://apache.claz.org/lucene/solr/6.4.0/solr-6.4.0.tgz
+    args:
+      chdir: "{{ solr_dir }}"
+    #when: check_path.stat.exists
+
+  - name: untar solr app
+    command: tar -xvzf {{ solr_dir }}/solr-6.4.0.tgz
+    args:
+      chdir: "{{ solr_dir }}"
+      creates: "{{ solr_dir }}/solr-6.4.0"
+    when: check_path.stat.exists
+
+  - name: remove tar file.
+    file:
+      path: "{{ solr_dir }}/solr-6.4.0.tgz"
+      state: absent
+      
+     
+  - name: Create solr user and group
+    user: 
+      name: solr
+      shell: /bin/bash
+      
+
+  - name: rename directory
+    command: mv {{ solr_dir }}/solr-6.4.0 {{ solr_dir }}/solr
+    args: creates={{ solr_dir }}/solr
+    when: check_path.stat.exists
+
+  - name: remove solr-6.4 directory if still there
+    file:
+      path: "{{ solr_dir }}/solr-6.4.0"
+      state: absent
+  - name: change solr ownership here
+    file:
+      path: "{{ solr_dir }}/solr"
+      owner: solr
+      group: solr
+      recurse: yes
+  - name: start the solr service 
+    become_user: solr
+    shell: " {{ solr_home_bin }}/solr restart"
